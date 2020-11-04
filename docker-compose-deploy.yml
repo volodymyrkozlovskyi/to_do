@@ -1,0 +1,43 @@
+version: '3.7'
+
+volumes:
+  db_data:
+
+networks:
+  admin-network:
+  app-network:
+
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}"
+    volumes:
+     - ./db_data:/var/lib/mysql
+
+  app:
+    build:
+      context: .
+    environment:
+      - SECRET_KEY="${SECRET_KEY}"
+      - ALLOWED_HOSTS=127.0.0.1,localhost
+      - DEBUG=1
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - db
+
+
+  proxy:
+    build:
+      context: ./proxy
+    ports:
+      - "8080:8080"
+    depends_on:
+      - app
